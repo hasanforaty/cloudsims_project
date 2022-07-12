@@ -14,6 +14,7 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
+import others.WorkloadFileReader;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -93,25 +94,32 @@ public class CloudSimExample3 {
 
 
 			//Fifth step: Create two Cloudlets
-			cloudletList = new ArrayList<Cloudlet>();
+//			cloudletList = new ArrayList<Cloudlet>();
+//
+//			//Cloudlet properties
+//			int id = 0;
+//			long length = 40000;
+//			long fileSize = 300;
+//			long outputSize = 300;
+//			UtilizationModel utilizationModel = new UtilizationModelFull();
+//
+//			Cloudlet cloudlet1 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+//			cloudlet1.setUserId(brokerId);
+//
+//			id++;
+//			Cloudlet cloudlet2 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+//			cloudlet2.setUserId(brokerId);
+//
+//			//add the cloudlets to the list
+//			cloudletList.add(cloudlet1);
+//			cloudletList.add(cloudlet2);
 
-			//Cloudlet properties
-			int id = 0;
-			long length = 40000;
-			long fileSize = 300;
-			long outputSize = 300;
-			UtilizationModel utilizationModel = new UtilizationModelFull();
-
-			Cloudlet cloudlet1 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
-			cloudlet1.setUserId(brokerId);
-
-			id++;
-			Cloudlet cloudlet2 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
-			cloudlet2.setUserId(brokerId);
-
-			//add the cloudlets to the list
-			cloudletList.add(cloudlet1);
-			cloudletList.add(cloudlet2);
+			WorkloadFileReader fileReader = new WorkloadFileReader("src/SDSC-Par-1995-3.1-cln.swf",1);
+			cloudletList= fileReader.generateWorkload();
+			cloudletList.forEach(item->{
+				item.setUserId(brokerId);
+			});
+			printCloudletList(cloudletList);
 
 			//submit cloudlet list to the broker
 			broker.submitCloudletList(cloudletList);
@@ -119,8 +127,8 @@ public class CloudSimExample3 {
 
 			//bind the cloudlets to the vms. This way, the broker
 			// will submit the bound cloudlets only to the specific VM
-			broker.bindCloudletToVm(cloudlet1.getCloudletId(),vm1.getId());
-			broker.bindCloudletToVm(cloudlet2.getCloudletId(),vm2.getId());
+			broker.bindCloudletToVm(cloudletList.get(0).getCloudletId(),vm1.getId());
+			broker.bindCloudletToVm(cloudletList.get(1).getCloudletId(),vm2.getId());
 
 			// Sixth step: Starts the simulation
 			CloudSim.startSimulation();

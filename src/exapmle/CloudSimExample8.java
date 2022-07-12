@@ -17,12 +17,10 @@ import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
+import others.WorkloadFileReader;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * An example showing how to create simulation entities
@@ -117,11 +115,35 @@ public class CloudSimExample8 {
 			int brokerId = broker.getId();
 
 			//Fourth step: Create VMs and Cloudlets and send them to broker
-			vmList = createVM(brokerId, 5, 0); //creating 5 vms
-			cloudletList = createCloudlet(brokerId, 10, 0); // creating 10 cloudlets
+			vmList = createVM(brokerId, 40, 0); //creating 4 vms
+			WorkloadFileReader fileReader = new WorkloadFileReader("src/SDSC-Par-1995-3.1-cln.swf",1);
+			cloudletList= fileReader.generateWorkload();
+			cloudletList.forEach(item->{
+				item.setUserId(brokerId);
+			});
+//			cloudletList = createCloudlet(brokerId, 10, 0);
 
 			broker.submitVmList(vmList);
 			broker.submitCloudletList(cloudletList);
+
+			//start of Algorithm
+			long[] processSize = new long[vmList.size()];
+			for (int i=0;i<vmList.size();i++){
+				processSize[i] = vmList.get(i).getRam();
+			}
+			long[] jobSize = new long[cloudletList.size()];
+			for (int i=0;i<cloudletList.size();i++){
+				jobSize[i] = cloudletList.get(i).getCloudletFileSize()*100;
+			}
+			long[] algorithmResult = bestFit(processSize,processSize.length,jobSize,jobSize.length);
+			for (int i=0;i<cloudletList.size();i++){
+				long vmNum = algorithmResult[i];
+				if (vmNum<0){
+					continue;
+				}
+				System.out.println(cloudletList.get(i).getCloudletFileSize());
+				broker.bindCloudletToVm(cloudletList.get(i).getCloudletId(),vmList.get((int)vmNum).getId());
+			}
 
 			// Fifth step: Starts the simulation
 			CloudSim.startSimulation();
@@ -342,5 +364,51 @@ public class CloudSimExample8 {
 		}
 
 	}
+
+		static long[] bestFit(long[] blockSize, int m, long[] processSize,
+							int n) {
+			// Stores block id of the block allocated to a
+			// process
+			long[] allocation = new long[n];
+
+			// Initially no block is assigned to any process
+			Arrays.fill(allocation, -1);
+
+			// pick each process and find suitable blocks
+			// according to its size ad assign to it
+			for (int i = 0; i < n; i++) {
+				// Find the best fit block for current process
+				int bestIdx = -1;
+				for (int j = 0; j < m; j++) {
+					if (blockSize[j] >= processSize[i]) {
+						if (bestIdx == -1)
+							bestIdx = j;
+						else if (blockSize[bestIdx] > blockSize[j])
+							bestIdx = j;
+					}
+				}
+
+				// If we could find a block for current process
+				if (bestIdx != -1) {
+					// allocate block j to p[i] process
+					allocation[i] = bestIdx;
+
+					// Reduce available memory in this block.
+					blockSize[bestIdx] -= processSize[i];
+				}
+
+			}
+
+			for (int i = 0; i < n; i++)
+			{
+				System.out.print("   " + (i+1) + "\t\t" + processSize[i] + "\t\t");
+				if (allocation[i] != -1)
+					System.out.print(allocation[i] + 1);
+				else
+					System.out.print("Not Allocated");
+				System.out.println();
+			}
+			return allocation;
+		}
 
 }

@@ -89,7 +89,7 @@ public class WorkloadFileReader implements WorkloadModel {
 
 	// submitted the
 	// job
-	private int MAX_FIELD = 40000; // max number of field in the trace file
+	private int MAX_FIELD = 18; // max number of field in the trace file
 
 	private String COMMENT = ";"; // a string that denotes the start of a
 

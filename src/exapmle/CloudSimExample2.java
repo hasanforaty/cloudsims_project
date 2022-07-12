@@ -15,6 +15,7 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
+import org.cloudbus.cloudsim.util.WorkloadFileReader;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -106,21 +107,36 @@ public class CloudSimExample2 {
 	            	cloudlet1.setUserId(brokerId);
 
 	            	id++;
-	            	Cloudlet cloudlet2 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
-	            	cloudlet2.setUserId(brokerId);
+//	            	Cloudlet cloudlet2 = new Cloudlet(id, length, pesNumber, fileSize, outputSize, utilizationModel, utilizationModel, utilizationModel);
+//	            	cloudlet2.setUserId(brokerId);
+//
+//	            	//add the cloudlets to the list
+//	            	cloudletList.add(cloudlet1);
+//	            	cloudletList.add(cloudlet2);
 
-	            	//add the cloudlets to the list
-	            	cloudletList.add(cloudlet1);
-	            	cloudletList.add(cloudlet2);
-
+					org.cloudbus.cloudsim.util.WorkloadFileReader fileReader = new WorkloadFileReader("src/SDSC-Par-1995-3.1-cln.swf",1);
+					ArrayList<Cloudlet> jobs = fileReader.generateWorkload();
+					cloudletList = jobs;
 	            	//submit cloudlet list to the broker
+				for (Cloudlet cloudlet : cloudletList) {
+					cloudlet.setUserId(brokerId);
+					cloudlet.setUtilizationModelBw(utilizationModel);
+					cloudlet.setUtilizationModelCpu(utilizationModel);
+					cloudlet.setUtilizationModelRam(utilizationModel);
+
+				}
 	            	broker.submitCloudletList(cloudletList);
 
+				for (Cloudlet item:cloudletList){
+					broker.bindCloudletToVm(item.getCloudletId(), vm2.getId());
+				}
 
-	            	//bind the cloudlets to the vms. This way, the broker
-	            	// will submit the bound cloudlets only to the specific VM
-	            	broker.bindCloudletToVm(cloudlet1.getCloudletId(),vm1.getId());
-	            	broker.bindCloudletToVm(cloudlet2.getCloudletId(),vm2.getId());
+
+
+//	            	//bind the cloudlets to the vms. This way, the broker
+//	            	// will submit the bound cloudlets only to the specific VM
+//	            	broker.bindCloudletToVm(cloudlet1.getCloudletId(),vm1.getId());
+//	            	broker.bindCloudletToVm(cloudlet2.getCloudletId(),vm2.getId());
 
 	            	// Sixth step: Starts the simulation
 	            	CloudSim.startSimulation();
